@@ -1,0 +1,11 @@
+{
+  "plugins": [
+    "https://plugins.dprint.dev/typescript-0.95.11.wasm"
+  ],
+  "typescript": {
+    "lineWidth": 100,
+    "indentWidth": 8,
+    "useTabs": true,
+    "semiColons": "always"
+  }
+}
