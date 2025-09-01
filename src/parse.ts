@@ -13,7 +13,8 @@ const lexime = {
 const regexp = RegExp(
 	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
 		+ "|"
-		+ `(?<variable>[^ ${Object.values(lexime).join("")}]+)`,
+		// reserve CAP for logical constants
+		+ `(?<variable>[^ A-Z${Object.values(lexime).join("")}]+)`,
 	"g",
 );
 
