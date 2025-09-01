@@ -44,17 +44,16 @@ function lexes(expression: string): Token[] {
 }
 
 // <LogicExp> ::= <Disjunct>
-
 // <Disjunct> ::= <Conjunct> ( [disjunct] <Conjunct> )*
-
 // <Conjunct> ::= <Negation> ( [conjunct] <Negation> )*
-
-// <Negation> ::= [negation] <Negation> | <BaseAtom>
-
-// <BaseAtom> ::= <LogicVal> | <Variable> | [lbracket] <LogicExp> [rbracket]
-
+// <Negation> ::=
+// 				| [negation] <Negation>
+// 				| <BaseAtom>
+// <BaseAtom> ::=
+// 				| <LogicVal>
+// 				| <Variable>
+// 				| [lbracket] <LogicExp> [rbracket]
 // <LogicVal> ::= [truthval] | [falseval]
-
 // <Variable> ::= [variable]
 
 export class LogParser {
