@@ -42,3 +42,40 @@ function lexes(expression: string): Token[] {
 		};
 	});
 }
+
+// <LogicExp> ::= <Disjunct>
+
+// <Disjunct> ::= <Conjunct> ( [disjunct] <Conjunct> )*
+
+// <Conjunct> ::= <Negation> ( [conjunct] <Negation> )*
+
+// <Negation> ::= [negation] <Negation> | <BaseAtom>
+
+// <BaseAtom> ::= <LogicVal> | <Variable> | [lbracket] <LogicExp> [rbracket]
+
+// <LogicVal> ::= [truthval] | [falseval]
+
+// <Variable> ::= [variable]
+
+export class LogParser {
+	constructor(public tokens: Token[]) {}
+	private idx = 0;
+
+	private matches(kind: Token["kind"]): boolean {
+		return this.tokens[this.idx].kind === kind;
+	}
+	private consume(kind: Token["kind"]): Token {
+		const next = this.tokens[this.idx];
+
+		if (next.kind !== kind) {
+			throw new Error(`expected ${kind}, received ${next.kind}`);
+		}
+		this.idx++;
+
+		return next;
+	}
+}
+
+// tests
+// const tokens = lexes("!a & (b | a)");
+// const parser = new LogParser(tokens);
