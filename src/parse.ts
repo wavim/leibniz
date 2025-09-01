@@ -1,4 +1,16 @@
-import { Token } from "./types/token";
+interface Token {
+	kind:
+		| "variable"
+		| "truthval"
+		| "falseval"
+		| "lbracket"
+		| "rbracket"
+		| "negation"
+		| "conjunct"
+		| "disjunct";
+	raw: string;
+	pos: number;
+}
 
 const lexime = {
 	truthval: "T",
