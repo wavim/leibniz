@@ -1,6 +1,8 @@
 import { Token } from "./types/token";
 
 const lexime = {
+	truthval: "T",
+	falseval: "F",
 	lbracket: "(",
 	rbracket: ")",
 	negation: "!",
@@ -15,6 +17,7 @@ const regexp = RegExp(
 	"g",
 );
 
+// only feasible for unambiguous grammars
 function lexes(expression: string): Token[] {
 	return [...expression.matchAll(regexp)].map((match) => {
 		const selectors = match.groups as Record<Token["kind"], string | undefined>;
