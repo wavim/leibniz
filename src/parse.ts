@@ -48,11 +48,11 @@ function lexes(expression: string): Token[] {
 // <Conjunct> ::= <Negation> ( [conjunct] <Negation> )*
 // <Negation> ::=
 // 				| [negation] <Negation>
-// 				| <BaseAtom>
-// <BaseAtom> ::=
+// 				| <GroupExp>
+// <GroupExp> ::=
+// 				| [lbracket] <LogicExp> [rbracket]
 // 				| <LogicVal>
 // 				| <Variable>
-// 				| [lbracket] <LogicExp> [rbracket]
 // <LogicVal> ::= [truthval] | [falseval]
 // <Variable> ::= [variable]
 
