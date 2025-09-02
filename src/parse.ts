@@ -69,19 +69,19 @@ type AstNode =
 	| VariableNode;
 
 class DisjunctNode {
-	constructor(public child: AstNode[]) {}
+	constructor(public data: AstNode[]) {}
 }
 class ConjunctNode {
-	constructor(public child: AstNode[]) {}
+	constructor(public data: AstNode[]) {}
 }
 class NegationNode {
-	constructor(public child: AstNode) {}
+	constructor(public data: AstNode) {}
 }
 class LogicValNode {
-	constructor(public value: boolean) {}
+	constructor(public data: boolean) {}
 }
 class VariableNode {
-	constructor(public value: string) {}
+	constructor(public data: string) {}
 }
 
 class Parse {
