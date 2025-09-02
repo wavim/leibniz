@@ -1,3 +1,10 @@
+export function parseExp(expression: string): AstNode {
+	const tokens = lexes(expression);
+	const parser = new Parse(tokens);
+
+	return parser.parse();
+}
+
 interface Token {
 	kind:
 		| "variable"
@@ -8,8 +15,7 @@ interface Token {
 		| "negation"
 		| "conjunct"
 		| "disjunct";
-	raw: string;
-	pos: number;
+	data: string;
 }
 
 const lexime = {
@@ -33,12 +39,11 @@ const regexp = RegExp(
 // only feasible for unambiguous grammars
 function lexes(expression: string): Token[] {
 	return [...expression.matchAll(regexp)].map((match) => {
-		const selectors = match.groups as Record<Token["kind"], string | undefined>;
+		const gp = match.groups as Record<string, string | undefined>;
 
 		return {
-			kind: Object.keys(selectors).find((k) => selectors[k]) as Token["kind"],
-			raw: match[0],
-			pos: match.index,
+			kind: Object.keys(gp).find((k) => gp[k]) as Token["kind"],
+			data: match[0],
 		};
 	});
 }
@@ -56,25 +61,115 @@ function lexes(expression: string): Token[] {
 // <LogicVal> ::= [truthval] | [falseval]
 // <Variable> ::= [variable]
 
-export class LogParser {
-	constructor(public tokens: Token[]) {}
-	private idx = 0;
+type AstNode =
+	| DisjunctNode
+	| ConjunctNode
+	| NegationNode
+	| LogicValNode
+	| VariableNode;
 
-	private matches(kind: Token["kind"]): boolean {
-		return this.tokens[this.idx].kind === kind;
-	}
-	private consume(kind: Token["kind"]): Token {
-		const next = this.tokens[this.idx];
-
-		if (next.kind !== kind) {
-			throw new Error(`expected ${kind}, received ${next.kind}`);
-		}
-		this.idx++;
-
-		return next;
-	}
+class DisjunctNode {
+	constructor(public child: AstNode[]) {}
+}
+class ConjunctNode {
+	constructor(public child: AstNode[]) {}
+}
+class NegationNode {
+	constructor(public child: AstNode) {}
+}
+class LogicValNode {
+	constructor(public value: boolean) {}
+}
+class VariableNode {
+	constructor(public value: string) {}
 }
 
-// tests
-// const tokens = lexes("!a & (b | a)");
-// const parser = new LogParser(tokens);
+class Parse {
+	private idx = 0;
+	constructor(public tokens: Token[]) {}
+
+	private matches(kind?: Token["kind"]): boolean {
+		return this.tokens[this.idx]?.kind === kind;
+	}
+	private consume(): Token {
+		return this.tokens[this.idx++];
+	}
+
+	parse(): AstNode {
+		const LogicExp = this.LogicExp();
+
+		if (this.idx !== this.tokens.length) {
+			throw new Error("unexpected end");
+		}
+
+		return LogicExp;
+	}
+
+	private LogicExp(): AstNode {
+		return this.Disjunct();
+	}
+
+	private Disjunct(): AstNode {
+		const children = [this.Conjunct()];
+
+		while (this.matches("disjunct") && this.consume()) {
+			children.push(this.Conjunct());
+		}
+
+		return children.length === 1 ? children[0] : new DisjunctNode(children);
+	}
+
+	private Conjunct(): AstNode {
+		const children = [this.Negation()];
+
+		while (this.matches("conjunct") && this.consume()) {
+			children.push(this.Negation());
+		}
+
+		return children.length === 1 ? children[0] : new ConjunctNode(children);
+	}
+
+	private Negation(): AstNode {
+		let level = 0;
+
+		while (this.matches("negation") && this.consume()) {
+			level++;
+		}
+
+		let Negation = this.GroupExp();
+
+		for (let i = 0; i < level; i++) {
+			Negation = new NegationNode(Negation);
+		}
+
+		return Negation;
+	}
+
+	private GroupExp(): AstNode {
+		const next = this.consume();
+
+		switch (next.kind) {
+			case "lbracket": {
+				const LogicExp = this.LogicExp();
+
+				if (!this.matches("rbracket")) {
+					throw new Error(`expected rbracket`);
+				}
+				this.consume();
+
+				return LogicExp;
+			}
+			case "truthval": {
+				return new LogicValNode(true);
+			}
+			case "falseval": {
+				return new LogicValNode(false);
+			}
+			case "variable": {
+				return new VariableNode(next.data);
+			}
+		}
+
+		throw new Error(`unexpected ${next.kind}`);
+	}
+}
