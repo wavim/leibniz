@@ -146,9 +146,9 @@ class Parse {
 	}
 
 	private GroupExp(): AstNode {
-		const next = this.consume();
+		const token = this.consume();
 
-		switch (next.kind) {
+		switch (token?.kind) {
 			case "lbracket": {
 				const LogicExp = this.LogicExp();
 
@@ -166,10 +166,10 @@ class Parse {
 				return new LogicValNode(false);
 			}
 			case "variable": {
-				return new VariableNode(next.data);
+				return new VariableNode(token.data);
 			}
 		}
 
-		throw new Error(`unexpected ${next.kind}`);
+		throw new Error(`unexpected ${token?.kind ?? "end"}`);
 	}
 }
