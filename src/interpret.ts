@@ -1,4 +1,4 @@
-export function parseExp(expression: string): AstNode {
+export function interpret(expression: string): AstNode {
 	const tokens = lexes(expression);
 	const parser = new Parse(tokens);
 
