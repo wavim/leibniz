@@ -31,8 +31,8 @@ const lexime = {
 const regexp = RegExp(
 	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
 		+ "|"
-		// cannot include T/F
-		+ `(?<variable>[^ ${Object.values(lexime).join("")}]+)`,
+		// identifier cannot include T/F
+		+ `(?<variable>[^${Object.values(lexime).join("")}\\s]+)`,
 	"g",
 );
 
@@ -61,26 +61,26 @@ function lexes(expression: string): Token[] {
 // <LogicVal> ::= [truthval] | [falseval]
 // <Variable> ::= [variable]
 
-type AstNode =
+export type AstNode =
 	| DisjunctNode
 	| ConjunctNode
 	| NegationNode
 	| LogicValNode
 	| VariableNode;
 
-class DisjunctNode {
+export class DisjunctNode {
 	constructor(public data: AstNode[]) {}
 }
-class ConjunctNode {
+export class ConjunctNode {
 	constructor(public data: AstNode[]) {}
 }
-class NegationNode {
+export class NegationNode {
 	constructor(public data: AstNode) {}
 }
-class LogicValNode {
+export class LogicValNode {
 	constructor(public data: boolean) {}
 }
-class VariableNode {
+export class VariableNode {
 	constructor(public data: string) {}
 }
 
