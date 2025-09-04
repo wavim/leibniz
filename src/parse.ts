@@ -1,4 +1,4 @@
-export function interpret(expression: string): AstNode {
+export function parseExp(expression: string): AstNode {
 	const tokens = lexes(expression);
 	const parser = new Parse(tokens);
 
@@ -6,7 +6,7 @@ export function interpret(expression: string): AstNode {
 }
 
 interface Token {
-	kind:
+	type:
 		| "variable"
 		| "truthval"
 		| "falseval"
@@ -26,7 +26,7 @@ const lexime = {
 	negation: "!",
 	conjunct: "&",
 	disjunct: "|",
-} as const satisfies Record<Exclude<Token["kind"], "variable">, string>;
+} as const satisfies Record<Exclude<Token["type"], "variable">, string>;
 
 const regexp = RegExp(
 	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
@@ -42,7 +42,7 @@ function lexes(expression: string): Token[] {
 		const gp = match.groups as Record<string, string | undefined>;
 
 		return {
-			kind: Object.keys(gp).find((k) => gp[k]) as Token["kind"],
+			type: Object.keys(gp).find((k) => gp[k]) as Token["type"],
 			data: match[0],
 		};
 	});
@@ -68,65 +68,63 @@ export type AstNode =
 	| LogicValNode
 	| VariableNode;
 
-export class DisjunctNode {
-	constructor(public data: AstNode[]) {}
+interface DisjunctNode {
+	type: "disjunct";
+	data: AstNode[];
 }
-export class ConjunctNode {
-	constructor(public data: AstNode[]) {}
+interface ConjunctNode {
+	type: "conjunct";
+	data: AstNode[];
 }
-export class NegationNode {
-	constructor(public data: AstNode) {}
+interface NegationNode {
+	type: "negation";
+	data: AstNode;
 }
-export class LogicValNode {
-	constructor(public data: boolean) {}
+interface LogicValNode {
+	type: "logicval";
+	data: boolean;
 }
-export class VariableNode {
-	constructor(public data: string) {}
+interface VariableNode {
+	type: "variable";
+	data: string;
 }
 
 class Parse {
 	private idx = 0;
 	constructor(public tokens: Token[]) {}
 
-	private matches(kind?: Token["kind"]): boolean {
-		return this.tokens[this.idx]?.kind === kind;
+	private matches(kind?: Token["type"]): boolean {
+		return this.tokens[this.idx]?.type === kind;
 	}
 	private consume(): Token {
 		return this.tokens[this.idx++];
 	}
 
 	parse(): AstNode {
-		const LogicExp = this.LogicExp();
+		const data = this.Disjunct();
 
 		if (this.idx !== this.tokens.length) {
 			throw new Error("unexpected end");
 		}
-
-		return LogicExp;
-	}
-
-	private LogicExp(): AstNode {
-		return this.Disjunct();
+		return data;
 	}
 
 	private Disjunct(): AstNode {
-		const children = [this.Conjunct()];
+		const data = [this.Conjunct()];
 
 		while (this.matches("disjunct") && this.consume()) {
-			children.push(this.Conjunct());
+			data.push(this.Conjunct());
 		}
-
-		return children.length === 1 ? children[0] : new DisjunctNode(children);
+		return data.length === 1 ? data[0] : { type: "disjunct", data };
 	}
 
 	private Conjunct(): AstNode {
-		const children = [this.Negation()];
+		const data = [this.Negation()];
 
 		while (this.matches("conjunct") && this.consume()) {
-			children.push(this.Negation());
+			data.push(this.Negation());
 		}
-
-		return children.length === 1 ? children[0] : new ConjunctNode(children);
+		return data.length === 1 ? data[0] : { type: "conjunct", data };
 	}
 
 	private Negation(): AstNode {
@@ -136,40 +134,38 @@ class Parse {
 			level++;
 		}
 
-		let Negation = this.GroupExp();
+		let data = this.GroupExp();
 
 		for (let i = 0; i < level; i++) {
-			Negation = new NegationNode(Negation);
+			data = { type: "negation", data };
 		}
-
-		return Negation;
+		return data;
 	}
 
 	private GroupExp(): AstNode {
 		const token = this.consume();
 
-		switch (token?.kind) {
+		switch (token?.type) {
 			case "lbracket": {
-				const LogicExp = this.LogicExp();
+				const data = this.Disjunct();
 
 				if (!this.matches("rbracket")) {
 					throw new Error(`expected rbracket`);
 				}
 				this.consume();
 
-				return LogicExp;
+				return data;
 			}
 			case "truthval": {
-				return new LogicValNode(true);
+				return { type: "logicval", data: true };
 			}
 			case "falseval": {
-				return new LogicValNode(false);
+				return { type: "logicval", data: false };
 			}
 			case "variable": {
-				return new VariableNode(token.data);
+				return token as VariableNode;
 			}
 		}
-
-		throw new Error(`unexpected ${token?.kind ?? "end"}`);
+		throw new Error(`unexpected ${token?.type ?? "end"}`);
 	}
 }
