@@ -18,7 +18,7 @@ interface Token {
 	data: string;
 }
 
-const lexime = {
+export const lexime = {
 	truthval: "T",
 	falseval: "F",
 	lbracket: "(",
