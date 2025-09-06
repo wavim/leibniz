@@ -2,7 +2,7 @@ export function parseExp(expression: string): AstNode {
 	const tokens = lexes(expression);
 	const parser = new Parse(tokens);
 
-	return parser.parse();
+	return parser.tree();
 }
 
 interface Token {
@@ -100,7 +100,7 @@ class Parse {
 		return this.tokens[this.idx++];
 	}
 
-	parse(): AstNode {
+	tree(): AstNode {
 		const data = this.Disjunct();
 
 		if (this.idx !== this.tokens.length) {
@@ -115,7 +115,7 @@ class Parse {
 		while (this.matches("disjunct") && this.consume()) {
 			data.push(this.Conjunct());
 		}
-		return data.length === 1 ? data[0] : { type: "disjunct", data };
+		return data.length > 1 ? { type: "disjunct", data } : data[0];
 	}
 
 	private Conjunct(): AstNode {
@@ -124,7 +124,7 @@ class Parse {
 		while (this.matches("conjunct") && this.consume()) {
 			data.push(this.Negation());
 		}
-		return data.length === 1 ? data[0] : { type: "conjunct", data };
+		return data.length > 1 ? { type: "conjunct", data } : data[0];
 	}
 
 	private Negation(): AstNode {
