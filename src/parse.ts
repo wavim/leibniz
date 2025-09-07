@@ -113,7 +113,13 @@ class Parse {
 		const data = [this.Conjunct()];
 
 		while (this.matches("disjunct") && this.consume()) {
-			data.push(this.Conjunct());
+			const node = this.Conjunct();
+
+			if (node.type === "disjunct") {
+				data.push(...node.data);
+			} else {
+				data.push(node);
+			}
 		}
 		return data.length > 1 ? { type: "disjunct", data } : data[0];
 	}
@@ -122,7 +128,13 @@ class Parse {
 		const data = [this.Negation()];
 
 		while (this.matches("conjunct") && this.consume()) {
-			data.push(this.Negation());
+			const node = this.Negation();
+
+			if (node.type === "conjunct") {
+				data.push(...node.data);
+			} else {
+				data.push(node);
+			}
 		}
 		return data.length > 1 ? { type: "conjunct", data } : data[0];
 	}
