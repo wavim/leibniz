@@ -1,7 +1,7 @@
 {
-  "devDependencies": {
-    "dprint": "^0.50.1",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
-  }
+	"devDependencies": {
+		"dprint": "^0.50.1",
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.2"
+	}
 }

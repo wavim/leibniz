@@ -1,7 +1,7 @@
 {
-    "compilerOptions": {
-        "strict": true,
-        "target": "ESNext",
-        "module": "ESNext",
-    }
+	"compilerOptions": {
+		"strict": true,
+		"target": "ESNext",
+		"module": "ESNext"
+	}
 }
