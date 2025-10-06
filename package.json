@@ -1,7 +1,13 @@
 {
 	"devDependencies": {
+		"@types/jest": "^30.0.0",
 		"dprint": "^0.50.1",
+		"jest": "^30.2.0",
+		"ts-jest": "^29.4.4",
 		"tsx": "^4.20.5",
 		"typescript": "^5.9.2"
+	},
+	"scripts": {
+		"test": "jest"
 	}
 }
