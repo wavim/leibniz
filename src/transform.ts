@@ -1,59 +1,76 @@
-import {
-	AstNode,
-	ConjunctNode,
-	DisjunctNode,
-	NegationNode,
-} from "./interpret"; // use matcher
+import { AstNode, ConjunctNode, DisjunctNode, NegationNode, parseExp } from "./parse";
 
-// implement a pattern matcher class instead
-function normalize(tree: AstNode): AstNode {
-	if (tree instanceof NegationNode) {
-		if (tree.data instanceof NegationNode) {
-			return normalize(tree.data.data);
-		}
-
-		if (tree.data instanceof ConjunctNode) {
-			return new DisjunctNode(
-				tree.data.data.map((n) => new NegationNode(normalize(n))),
-			);
-		}
-
-		if (tree.data instanceof DisjunctNode) {
-			return new ConjunctNode(
-				tree.data.data.map((n) => new NegationNode(normalize(n))),
-			);
-		}
-
-		return tree;
-	}
-
-	if (tree instanceof ConjunctNode) {
-		// only handles 2 cases (1 with canoc form)
-		if (tree.data[1] instanceof DisjunctNode) {
-			return new DisjunctNode([
-				new ConjunctNode([
-					normalize(tree.data[0]),
-					normalize(tree.data[1].data[0]),
-				]),
-				new ConjunctNode([
-					normalize(tree.data[0]),
-					normalize(tree.data[1].data[1]),
-				]),
-			]);
-		}
-		if (tree.data[0] instanceof DisjunctNode) {
-			return new DisjunctNode([
-				new ConjunctNode([
-					normalize(tree.data[0].data[0]),
-					normalize(tree.data[1]),
-				]),
-				new ConjunctNode([
-					normalize(tree.data[0].data[1]),
-					normalize(tree.data[1]),
-				]),
-			]);
-		}
-	}
-
-	return tree;
+function X<SE>(sets: SE[][]): SE[][] {
+	return sets.reduce<SE[][]>((x, s) => x.flatMap((p) => s.map((e) => [...p, e])), [[]]);
 }
+
+function _(node: AstNode): AstNode {
+	switch (node.type) {
+		case "disjunct": {
+			return _disjunct(node);
+		}
+		case "conjunct": {
+			return _conjunct(node);
+		}
+		case "negation": {
+			return _negation(node);
+		}
+	}
+	return node;
+}
+
+function _disjunct(node: DisjunctNode): AstNode {
+	const data = node.data.map(_);
+
+	return data.some((a) => a.type === "logicval" && a.data)
+		? { type: "logicval", data: true }
+		: { type: "disjunct", data };
+}
+
+function _conjunct(node: ConjunctNode): AstNode {
+	const data = node.data.map(_);
+
+	if (data.some((a) => a.type === "logicval" && !a.data)) {
+		return { type: "logicval", data: false };
+	}
+
+	const dnfs = data.filter((a) => a.type === "disjunct");
+	const rest = data.filter((a) => a.type !== "disjunct");
+
+	return {
+		type: "disjunct",
+		data: X(dnfs.map((a) => a.data)).map((x) => ({ type: "conjunct", data: x.concat(rest) })),
+	};
+}
+
+function _negation(node: NegationNode): AstNode {
+	switch (node.data.type) {
+		case "negation": {
+			return _(node.data.data);
+		}
+		case "logicval": {
+			return { type: "logicval", data: !node.data.data };
+		}
+		case "variable": {
+			return node;
+		}
+	}
+
+	const data = node.data.data.map((a) => ({
+		type: "negation" as const,
+		data: _(a),
+	}));
+
+	switch (node.data.type) {
+		case "disjunct": {
+			return { type: "conjunct", data };
+		}
+		case "conjunct": {
+			return { type: "disjunct", data };
+		}
+	}
+}
+
+const $ = (t: AstNode) => JSON.stringify(_(t), void 0, "  ");
+
+console.log($(parseExp("a & (b | c) & (d | e)")));

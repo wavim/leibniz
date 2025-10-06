@@ -68,23 +68,23 @@ export type AstNode =
 	| LogicValNode
 	| VariableNode;
 
-interface DisjunctNode {
+export interface DisjunctNode {
 	type: "disjunct";
 	data: AstNode[];
 }
-interface ConjunctNode {
+export interface ConjunctNode {
 	type: "conjunct";
 	data: AstNode[];
 }
-interface NegationNode {
+export interface NegationNode {
 	type: "negation";
 	data: AstNode;
 }
-interface LogicValNode {
+export interface LogicValNode {
 	type: "logicval";
 	data: boolean;
 }
-interface VariableNode {
+export interface VariableNode {
 	type: "variable";
 	data: string;
 }
