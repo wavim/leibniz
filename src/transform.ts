@@ -1,4 +1,4 @@
-import { AstNode, ConjunctNode, DisjunctNode, NegationNode, parseExp } from "./parse";
+import { AstNode, ConjunctNode, DisjunctNode, NegationNode, parse } from "./parse";
 
 function X<SE>(sets: SE[][]): SE[][] {
 	return sets.reduce<SE[][]>((x, s) => x.flatMap((p) => s.map((e) => [...p, e])), [[]]);
@@ -73,4 +73,4 @@ function _negation(node: NegationNode): AstNode {
 
 const $ = (t: AstNode) => JSON.stringify(_(t), void 0, "  ");
 
-console.log($(parseExp("a & (b | c) & (d | e)")));
+console.log($(parse("a & (b | c) & (d | e)")));

@@ -1,4 +1,4 @@
-export function parseExp(expression: string): AstNode {
+export function parse(expression: string): AstNode {
 	const tokens = lexes(expression);
 	const parser = new Parse(tokens);
 
@@ -31,8 +31,7 @@ export const lexime = {
 const regexp = RegExp(
 	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
 		+ "|"
-		// identifier cannot include T/F
-		+ `(?<variable>[^${Object.values(lexime).join("")}\\s]+)`,
+		+ `(?<variable>[^${Object.values(lexime).slice(2).join("")}\\s]+)`,
 	"g",
 );
 
