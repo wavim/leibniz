@@ -19,16 +19,18 @@ function _(node: AstNode): AstNode {
 	return node;
 }
 
+// TODO: all this mess is unbearable
+
 function _disjunct(node: DisjunctNode): AstNode {
-	const data = node.data.map(_);
+	const data = node.data.map(_).flatMap((a) => a.type === "disjunct" ? a.data : a);
 
 	return data.some((a) => a.type === "logicval" && a.data)
 		? { type: "logicval", data: true }
-		: { type: "disjunct", data: data.flatMap((a) => a.type === "disjunct" ? a.data : a) };
+		: { type: "disjunct", data: data };
 }
 
 function _conjunct(node: ConjunctNode): AstNode {
-	const data = node.data.map(_);
+	const data = node.data.map(_).flatMap((a) => a.type === "conjunct" ? a.data : a);
 
 	if (data.some((a) => a.type === "logicval" && !a.data)) {
 		return { type: "logicval", data: false };
@@ -37,7 +39,7 @@ function _conjunct(node: ConjunctNode): AstNode {
 	const dnfs = data.filter((a) => a.type === "disjunct");
 
 	if (!dnfs.length) {
-		return { type: "conjunct", data: data.flatMap((a) => a.type === "conjunct" ? a.data : a) };
+		return { type: "conjunct", data };
 	}
 	const rest = data.filter((a) => a.type !== "disjunct");
 
@@ -60,7 +62,7 @@ function _negation(node: NegationNode): AstNode {
 		}
 	}
 
-	const data = node.data.data.map((a) => ({ type: "negation" as const, data: _(a) }));
+	const data = node.data.data.map((a) => _({ type: "negation" as const, data: a }));
 
 	switch (node.data.type) {
 		case "disjunct": {
@@ -72,10 +74,10 @@ function _negation(node: NegationNode): AstNode {
 	}
 }
 
-const e = "!(A & B) | C";
+const e = "!(A & F) | B";
 
 const $ = (t: AstNode) => JSON.stringify(t, void 0, "  ");
 const n = parse(e);
 
-console.log($(n), "\n" + "-".repeat(100));
+console.log($(n), "\n" + "-".repeat(50));
 console.log($(_(n)));
