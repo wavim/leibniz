@@ -73,7 +73,7 @@ export interface ConjunctNode {
 }
 export interface NegationNode {
 	type: "negation";
-	node: AstNode;
+	term: AstNode;
 }
 export interface LogicValNode {
 	type: "logicval";
@@ -142,12 +142,12 @@ class Parser {
 			nest++;
 		}
 
-		let node = this.GroupExp();
+		let term = this.GroupExp();
 
 		for (let i = 0; i < nest; i++) {
-			node = { type: "negation", node };
+			term = { type: "negation", term };
 		}
-		return node;
+		return term;
 	}
 
 	private GroupExp(): AstNode {

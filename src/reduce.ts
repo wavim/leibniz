@@ -22,59 +22,59 @@ function _(node: AstNode): AstNode {
 // TODO: all this mess is unbearable
 
 function _disjunct(node: DisjunctNode): AstNode {
-	const data = node.data.map(_).flatMap((a) => a.type === "disjunct" ? a.data : a);
+	const list = node.list.map(_).flatMap((a) => a.type === "disjunct" ? a.list : a);
 
-	return data.some((a) => a.type === "logicval" && a.data)
-		? { type: "logicval", data: true }
-		: { type: "disjunct", data: data };
+	return list.some((a) => a.type === "logicval" && a.bool)
+		? { type: "logicval", bool: true }
+		: { type: "disjunct", list };
 }
 
 function _conjunct(node: ConjunctNode): AstNode {
-	const data = node.data.map(_).flatMap((a) => a.type === "conjunct" ? a.data : a);
+	const list = node.list.map(_).flatMap((a) => a.type === "conjunct" ? a.list : a);
 
-	if (data.some((a) => a.type === "logicval" && !a.data)) {
-		return { type: "logicval", data: false };
+	if (list.some((a) => a.type === "logicval" && !a.bool)) {
+		return { type: "logicval", bool: false };
 	}
 
-	const dnfs = data.filter((a) => a.type === "disjunct");
+	const dnfs = list.filter((a) => a.type === "disjunct");
 
 	if (!dnfs.length) {
-		return { type: "conjunct", data };
+		return { type: "conjunct", list };
 	}
-	const rest = data.filter((a) => a.type !== "disjunct");
+	const rest = list.filter((a) => a.type !== "disjunct");
 
 	return {
 		type: "disjunct",
-		data: X(dnfs.map((a) => a.data)).map((x) => ({ type: "conjunct", data: x.concat(rest) })),
+		list: X(dnfs.map((a) => a.list)).map((x) => ({ type: "conjunct", list: x.concat(rest) })),
 	};
 }
 
 function _negation(node: NegationNode): AstNode {
-	switch (node.data.type) {
+	switch (node.term.type) {
 		case "negation": {
-			return _(node.data.data);
+			return _(node.term.term);
 		}
 		case "logicval": {
-			return { type: "logicval", data: !node.data.data };
+			return { type: "logicval", bool: !node.term.bool };
 		}
 		case "variable": {
 			return node;
 		}
 	}
 
-	const data = node.data.data.map((a) => _({ type: "negation" as const, data: a }));
+	const list = node.term.list.map((a) => _negation({ type: "negation" as const, term: a }));
 
-	switch (node.data.type) {
+	switch (node.term.type) {
 		case "disjunct": {
-			return { type: "conjunct", data };
+			return { type: "conjunct", list };
 		}
 		case "conjunct": {
-			return { type: "disjunct", data };
+			return { type: "disjunct", list };
 		}
 	}
 }
 
-const e = "!(A & F) | B";
+const e = "a & (b | T) & (c | F)";
 
 const $ = (t: AstNode) => JSON.stringify(t, void 0, "  ");
 const n = parse(e);

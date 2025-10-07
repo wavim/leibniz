@@ -5,7 +5,7 @@ const x = (exp: string) => test(exp, () => expect(() => parse(exp)).toThrow());
 
 const any = (...list: AstNode[]) => ({ type: "disjunct", list }) as const;
 const all = (...list: AstNode[]) => ({ type: "conjunct", list }) as const;
-const not = (node: AstNode) => ({ type: "negation", node }) as const;
+const not = (term: AstNode) => ({ type: "negation", term }) as const;
 const v = (name: string) => ({ type: "variable", name }) as const;
 const T = { type: "logicval", bool: true } as const;
 const F = { type: "logicval", bool: false } as const;
