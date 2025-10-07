@@ -1,14 +1,14 @@
 import { AstNode, parse } from "../src/parse";
 
 const $ = (exp: string, ast: AstNode) => test(exp, () => expect(parse(exp)).toEqual(ast));
-const _ = (exp: string) => test(exp, () => expect(() => parse(exp)).toThrow());
+const x = (exp: string) => test(exp, () => expect(() => parse(exp)).toThrow());
 
-const any = (...data: AstNode[]) => ({ type: "disjunct", data }) as const;
-const all = (...data: AstNode[]) => ({ type: "conjunct", data }) as const;
-const not = (data: AstNode) => ({ type: "negation", data }) as const;
-const v = (data: string) => ({ type: "variable", data }) as const;
-const T = { type: "logicval", data: true } as const;
-const F = { type: "logicval", data: false } as const;
+const any = (...list: AstNode[]) => ({ type: "disjunct", list }) as const;
+const all = (...list: AstNode[]) => ({ type: "conjunct", list }) as const;
+const not = (node: AstNode) => ({ type: "negation", node }) as const;
+const v = (name: string) => ({ type: "variable", name }) as const;
+const T = { type: "logicval", bool: true } as const;
+const F = { type: "logicval", bool: false } as const;
 
 $("T", T);
 $("F", F);
@@ -31,25 +31,25 @@ $("A & (B | C)", all(v("A"), any(v("B"), v("C"))));
 $("A & T | (!B & C | !(D & E) & F)", any(all(v("A"), T), all(not(v("B")), v("C")), all(not(all(v("D"), v("E"))), F)));
 $("!A & (T | !B | C & (D | E | F))", all(not(v("A")), any(T, not(v("B")), all(v("C"), any(v("D"), v("E"), F)))));
 
-_("(");
-_(")");
-_(")(");
+x("(");
+x(")");
+x(")(");
 
-_("(()");
-_("())");
+x("(()");
+x("())");
 
-_("|");
-_("&");
+x("|");
+x("&");
 
-_("A || B");
-_("A && B");
+x("A || B");
+x("A && B");
 
-_("!");
-_("A!");
-_("!A!");
+x("!");
+x("A!");
+x("!A!");
 
-_("TFA");
-_("TAB");
+x("TFA");
+x("TAB");
 
-_("T F");
-_("A B");
+x("T F");
+x("A B");

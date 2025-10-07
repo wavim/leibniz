@@ -15,7 +15,7 @@ interface Token {
 		| "negation"
 		| "conjunct"
 		| "disjunct";
-	data: string;
+	text: string;
 }
 
 export const lexime = {
@@ -42,7 +42,7 @@ function lexes(expression: string): Token[] {
 
 		return {
 			type: Object.keys(gp).find((k) => gp[k]) as Token["type"],
-			data: match[0],
+			text: match[0],
 		};
 	});
 }
@@ -69,88 +69,89 @@ export type AstNode =
 
 export interface DisjunctNode {
 	type: "disjunct";
-	data: AstNode[];
+	list: AstNode[];
 }
 export interface ConjunctNode {
 	type: "conjunct";
-	data: AstNode[];
+	list: AstNode[];
 }
 export interface NegationNode {
 	type: "negation";
-	data: AstNode;
+	node: AstNode;
 }
 export interface LogicValNode {
 	type: "logicval";
-	data: boolean;
+	bool: boolean;
 }
 export interface VariableNode {
 	type: "variable";
-	data: string;
+	name: string;
 }
 
 class Parse {
-	private idx = 0;
 	constructor(public tokens: Token[]) {}
 
+	private pos = 0;
+
 	private matches(kind?: Token["type"]): boolean {
-		return this.tokens[this.idx]?.type === kind;
+		return this.tokens[this.pos]?.type === kind;
 	}
 	private consume(): Token {
-		return this.tokens[this.idx++];
+		return this.tokens[this.pos++];
 	}
 
 	tree(): AstNode {
-		const data = this.Disjunct();
+		const node = this.Disjunct();
 
-		if (this.idx !== this.tokens.length) {
+		if (this.pos !== this.tokens.length) {
 			throw new Error("unexpected end");
 		}
-		return data;
+		return node;
 	}
 
 	private Disjunct(): AstNode {
-		const data = [this.Conjunct()];
+		const list = [this.Conjunct()];
 
 		while (this.matches("disjunct") && this.consume()) {
 			const node = this.Conjunct();
 
 			if (node.type === "disjunct") {
-				data.push(...node.data);
+				list.push(...node.list);
 			} else {
-				data.push(node);
+				list.push(node);
 			}
 		}
-		return data.length > 1 ? { type: "disjunct", data } : data[0];
+		return list.length > 1 ? { type: "disjunct", list } : list[0];
 	}
 
 	private Conjunct(): AstNode {
-		const data = [this.Negation()];
+		const list = [this.Negation()];
 
 		while (this.matches("conjunct") && this.consume()) {
 			const node = this.Negation();
 
 			if (node.type === "conjunct") {
-				data.push(...node.data);
+				list.push(...node.list);
 			} else {
-				data.push(node);
+				list.push(node);
 			}
 		}
-		return data.length > 1 ? { type: "conjunct", data } : data[0];
+		return list.length > 1 ? { type: "conjunct", list } : list[0];
 	}
 
 	private Negation(): AstNode {
-		let level = 0;
+		let nest = 0;
 
 		while (this.matches("negation") && this.consume()) {
-			level++;
+			nest++;
 		}
 
-		let data = this.GroupExp();
+		let node = this.GroupExp();
 
-		for (let i = 0; i < level; i++) {
-			data = { type: "negation", data };
+		for (let i = 0; i < nest; i++) {
+			node = { type: "negation", node };
 		}
-		return data;
+		return node;
 	}
 
 	private GroupExp(): AstNode {
@@ -158,23 +159,23 @@ class Parse {
 
 		switch (token?.type) {
 			case "lbracket": {
-				const data = this.Disjunct();
+				const node = this.Disjunct();
 
 				if (!this.matches("rbracket")) {
 					throw new Error(`expected rbracket`);
 				}
 				this.consume();
 
-				return data;
+				return node;
 			}
 			case "truthval": {
-				return { type: "logicval", data: true };
+				return { type: "logicval", bool: true };
 			}
 			case "falseval": {
-				return { type: "logicval", data: false };
+				return { type: "logicval", bool: false };
 			}
 			case "variable": {
-				return token as VariableNode;
+				return { type: "variable", name: token.text };
 			}
 		}
 		throw new Error(`unexpected ${token?.type ?? "end"}`);
