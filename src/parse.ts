@@ -1,11 +1,8 @@
-export function parse(expression: string): AstNode {
-	const tokens = lexes(expression);
-	const parser = new Parse(tokens);
-
-	return parser.tree();
+export function parse(exp: string): AstNode {
+	return new Parser(tokens(exp)).tree();
 }
 
-interface Token {
+export interface Token {
 	type:
 		| "variable"
 		| "truthval"
@@ -28,16 +25,14 @@ export const lexime = {
 	disjunct: "|",
 } as const satisfies Record<Exclude<Token["type"], "variable">, string>;
 
-const regexp = RegExp(
+const regex = RegExp(
 	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
 		+ "|"
 		+ `(?<variable>[^${Object.values(lexime).slice(2).join("")}\\s]+)`,
 	"g",
 );
-
-// only feasible for unambiguous grammars
-function lexes(expression: string): Token[] {
-	return [...expression.matchAll(regexp)].map((match) => {
+export function tokens(exp: string): Token[] {
+	return [...exp.matchAll(regex)].map((match) => {
 		const gp = match.groups as Record<string, string | undefined>;
 
 		return {
@@ -88,7 +83,7 @@ export interface VariableNode {
 	name: string;
 }
 
-class Parse {
+class Parser {
 	constructor(public tokens: Token[]) {}
 
 	private pos = 0;
