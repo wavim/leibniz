@@ -31,6 +31,7 @@ const regex = RegExp(
 		+ `(?<variable>[^${Object.values(lexime).slice(2).join("")}\\s]+)`,
 	"g",
 );
+
 export function tokens(exp: string): Token[] {
 	return [...exp.matchAll(regex)].map((match) => {
 		const gp = match.groups as Record<string, string | undefined>;
@@ -99,7 +100,7 @@ class Parser {
 		const node = this.Disjunct();
 
 		if (this.pos !== this.tokens.length) {
-			throw new Error("unexpected end");
+			throw new Error(`unexpected ${this.consume().type}`);
 		}
 		return node;
 	}
@@ -153,25 +154,21 @@ class Parser {
 		const token = this.consume();
 
 		switch (token?.type) {
-			case "lbracket": {
+			case "lbracket":
 				const node = this.Disjunct();
 
 				if (!this.matches("rbracket")) {
-					throw new Error(`expected rbracket`);
+					throw new Error("unexpected end");
 				}
 				this.consume();
 
 				return node;
-			}
-			case "truthval": {
+			case "truthval":
 				return { type: "logicval", bool: true };
-			}
-			case "falseval": {
+			case "falseval":
 				return { type: "logicval", bool: false };
-			}
-			case "variable": {
+			case "variable":
 				return { type: "variable", name: token.text };
-			}
 		}
 		throw new Error(`unexpected ${token?.type ?? "end"}`);
 	}
