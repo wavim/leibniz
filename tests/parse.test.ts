@@ -14,7 +14,8 @@ $("T", T);
 $("F", F);
 
 $("A", v("A"));
-$("ATF", v("ATF"));
+$("TA", v("TA"));
+$("AT", v("AT"));
 
 $("T | A", any(T, v("A")));
 $("T | (F | A)", any(T, F, v("A")));
@@ -30,8 +31,6 @@ $("A & (B | C)", all(v("A"), any(v("B"), v("C"))));
 
 $("A & T | (!B & C | !(D & E) & F)", any(all(v("A"), T), all(not(v("B")), v("C")), all(not(all(v("D"), v("E"))), F)));
 $("!A & (T | !B | C & (D | E | F))", all(not(v("A")), any(T, not(v("B")), all(v("C"), any(v("D"), v("E"), F)))));
-
-x("TA");
 
 x("(");
 x(")");
