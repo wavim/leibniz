@@ -4,9 +4,9 @@ export function parse(exp: string): AstNode {
 
 export interface Token {
 	type:
-		| "variable"
 		| "truthval"
 		| "falseval"
+		| "variable"
 		| "lbracket"
 		| "rbracket"
 		| "negation"
@@ -14,23 +14,8 @@ export interface Token {
 		| "disjunct";
 	text: string;
 }
-
-export const lexime = {
-	truthval: "T",
-	falseval: "F",
-	lbracket: "(",
-	rbracket: ")",
-	negation: "!",
-	conjunct: "&",
-	disjunct: "|",
-} as const satisfies Record<Exclude<Token["type"], "variable">, string>;
-
-const regex = RegExp(
-	Object.entries(lexime).map(([kind, raw]) => `(?<${kind}>\\${raw})`).join("|")
-		+ "|"
-		+ `(?<variable>[^${Object.values(lexime).slice(2).join("")}\\s]+)`,
-	"g",
-);
+const regex =
+	/(?<truthval>T(?=$|[()!&|\s]))|(?<falseval>F(?=$|[()!&|\s]))|(?<variable>[^()!&|\s]+)|(?<lbracket>\()|(?<rbracket>\))|(?<negation>!)|(?<conjunct>&)|(?<disjunct>\|)/g;
 
 export function tokens(exp: string): Token[] {
 	return [...exp.matchAll(regex)].map((match) => {
@@ -60,8 +45,8 @@ export type AstNode =
 	| DisjunctNode
 	| ConjunctNode
 	| NegationNode
-	| LogicValNode
-	| VariableNode;
+	| VariableNode
+	| LogicValNode;
 
 export interface DisjunctNode {
 	type: "disjunct";
@@ -75,13 +60,13 @@ export interface NegationNode {
 	type: "negation";
 	term: AstNode;
 }
-export interface LogicValNode {
-	type: "logicval";
-	bool: boolean;
-}
 export interface VariableNode {
 	type: "variable";
 	name: string;
+}
+export interface LogicValNode {
+	type: "logicval";
+	bool: boolean;
 }
 
 class Parser {
@@ -154,6 +139,12 @@ class Parser {
 		const token = this.consume();
 
 		switch (token?.type) {
+			case "truthval":
+				return { type: "logicval", bool: true };
+			case "falseval":
+				return { type: "logicval", bool: false };
+			case "variable":
+				return { type: "variable", name: token.text };
 			case "lbracket":
 				const node = this.Disjunct();
 
@@ -163,12 +154,6 @@ class Parser {
 				this.consume();
 
 				return node;
-			case "truthval":
-				return { type: "logicval", bool: true };
-			case "falseval":
-				return { type: "logicval", bool: false };
-			case "variable":
-				return { type: "variable", name: token.text };
 		}
 		throw new Error(`unexpected ${token?.type ?? "end"}`);
 	}
