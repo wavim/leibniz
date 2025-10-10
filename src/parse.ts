@@ -4,9 +4,9 @@ export function parse(exp: string): AstNode {
 
 export interface Token {
 	type:
+		| "variable"
 		| "truthval"
 		| "falseval"
-		| "variable"
 		| "lbracket"
 		| "rbracket"
 		| "negation"
@@ -15,7 +15,7 @@ export interface Token {
 	text: string;
 }
 const regex =
-	/(?<truthval>T(?=$|[()!&|\s]))|(?<falseval>F(?=$|[()!&|\s]))|(?<variable>[^()!&|\s]+)|(?<lbracket>\()|(?<rbracket>\))|(?<negation>!)|(?<conjunct>&)|(?<disjunct>\|)/g;
+	/(?<disjunct>\|)|(?<conjunct>&)|(?<negation>!)|(?<lbracket>\()|(?<rbracket>\))|(?<truthval>T(?=$|[()!&|\s]))|(?<falseval>F(?=$|[()!&|\s]))|(?<variable>[^()!&|\s]+)/g;
 
 export function tokens(exp: string): Token[] {
 	return [...exp.matchAll(regex)].map((match) => {
@@ -45,8 +45,8 @@ export type AstNode =
 	| DisjunctNode
 	| ConjunctNode
 	| NegationNode
-	| VariableNode
-	| LogicValNode;
+	| LogicValNode
+	| VariableNode;
 
 export interface DisjunctNode {
 	type: "disjunct";
@@ -60,13 +60,13 @@ export interface NegationNode {
 	type: "negation";
 	term: AstNode;
 }
-export interface VariableNode {
-	type: "variable";
-	name: string;
-}
 export interface LogicValNode {
 	type: "logicval";
 	bool: boolean;
+}
+export interface VariableNode {
+	type: "variable";
+	name: string;
 }
 
 class Parser {
@@ -139,12 +139,12 @@ class Parser {
 		const token = this.consume();
 
 		switch (token?.type) {
+			case "variable":
+				return { type: "variable", name: token.text };
 			case "truthval":
 				return { type: "logicval", bool: true };
 			case "falseval":
 				return { type: "logicval", bool: false };
-			case "variable":
-				return { type: "variable", name: token.text };
 			case "lbracket":
 				const node = this.Disjunct();
 
